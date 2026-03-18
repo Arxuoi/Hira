@@ -7,7 +7,7 @@ const {
 const pino = require('pino');
 const qrcode = require('qrcode-terminal');
 const MessageHandler = require('./Handlers/messagehandlers');
-const config = require('./Config/config');
+const config = require('./config/config');
 
 console.log(`
 ╭━━━━━━━━━━━━━━━━━━━━━━╮
