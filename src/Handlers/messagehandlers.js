@@ -1,5 +1,5 @@
 const config = require('../config/config');
-const commandHandler = require('./commandHandler');
+const commandHandler = require('./commandhandlers');
 
 class MessageHandler {
     constructor(sock) {
