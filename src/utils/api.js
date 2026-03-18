@@ -10,7 +10,7 @@ class API {
         try {
             const response = await axios.get(`https://api.naze.biz.id/ai/chat`, {
                 params: {
-                    messages: query,
+                    query: query,  // ← GANTI DARI messages JADI query
                     apikey: this.apikey
                 },
                 timeout: 120000
