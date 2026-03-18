@@ -1,0 +1,8 @@
+node_modules/
+.env
+database/*
+!database/.gitkeep
+temp/*
+!temp/.gitkeep
+*.log
+auth_info_baileys/
