@@ -1,5 +1,5 @@
 const config = require('../config/config');
-const commandHandler = require('./commandhandlers');
+const commandhandlers = require('./commandhandlers');
 
 class MessageHandler {
     constructor(sock) {
@@ -9,41 +9,76 @@ class MessageHandler {
 
     async handle(msg) {
         try {
-            if (!msg.message) return;
+            console.log('🔧 Handler dijalankan...'); // DEBUG
+            
+            if (!msg.message) {
+                console.log('❌ Tidak ada message');
+                return;
+            }
 
             const messageType = Object.keys(msg.message)[0];
+            console.log('📋 Message type:', messageType); // DEBUG
+
             const text = msg.message.conversation || 
                         msg.message.extendedTextMessage?.text || 
                         msg.message.imageMessage?.caption || 
                         msg.message.videoMessage?.caption || '';
 
-            if (!text.startsWith(config.prefix)) return;
+            console.log('📝 Text:', text); // DEBUG
 
-            const args = text.slice(config.prefix.length).trim().split(/ +/);
-            const commandName = args.shift().toLowerCase();
+            if (!text) {
+                console.log('❌ Text kosong');
+                return;
+            }
 
-            // Command khusus ping
+            // Cek prefix
+            let args;
+            let commandName;
+
+            if (text.startsWith(config.prefix)) {
+                args = text.slice(config.prefix.length).trim().split(/ +/);
+                commandName = args.shift().toLowerCase();
+                console.log('✅ Dengan prefix:', commandName); // DEBUG
+            } else {
+                console.log('❌ Tanpa prefix, diabaikan');
+                return; // Hapus ini kalau mau global prefix
+            }
+
+            // Command ping
             if (commandName === 'ping') {
                 const uptime = (Date.now() - this.startTime) / 1000;
                 const ram = (process.memoryUsage().heapUsed / 1024 / 1024).toFixed(2);
                 
-                return await this.sock.sendMessage(msg.key.remoteJid, {
-                    text: `🏓 *Pong!*\n\n⏱️ Uptime: ${Math.floor(uptime)}s\n💾 RAM: ${ram} MB`
+                console.log('🏓 Mengirim ping...'); // DEBUG
+                
+                await this.sock.sendMessage(msg.key.remoteJid, {
+                    text: `🏓 Pong!\n\n⏱️ Uptime: ${Math.floor(uptime)}s\n💾 RAM: ${ram} MB`
                 });
+                
+                console.log('✅ Ping terkirim'); // DEBUG
+                return;
             }
 
-            const command = commandHandler.getCommand(commandName);
+            // Cek command
+            console.log('🔍 Mencari command:', commandName); // DEBUG
+            const command = commandhandlers.getCommand(commandName);
 
             if (command) {
-                await command.execute(this.sock, msg, args, commandHandler.getAllCommands());
+                console.log('✅ Command ditemukan:', command.name); // DEBUG
+                await command.execute(this.sock, msg, args);
+                console.log('✅ Command selesai'); // DEBUG
             } else {
+                console.log('❌ Command tidak ditemukan'); // DEBUG
                 await this.sock.sendMessage(msg.key.remoteJid, {
-                    text: `❌ Command *${commandName}* tidak ditemukan!\nKetik ${config.prefix}menu untuk melihat daftar command.`
+                    text: `❌ Command *${commandName}* tidak ditemukan!\nKetik ${config.prefix}menu untuk bantuan.`
                 });
             }
 
         } catch (error) {
-            console.error('Message Handler Error:', error);
+            console.error('❌ ERROR di handler:', error);
+            await this.sock.sendMessage(msg.key.remoteJid, {
+                text: `❌ Error: ${error.message}`
+            });
         }
     }
 }
