@@ -5,7 +5,7 @@ const {
 } = require('@whiskeysockets/baileys');
 const pino = require('pino');
 const qrcode = require('qrcode-terminal');
-const MessageHandler = require('./Handlers/messageHandler');
+const MessageHandler = require('./Handlers/messagehandler');
 const config = require('./config/config');
 
 console.log(`
