@@ -1,9 +1,9 @@
-const api = require('../../utils/api');
+const api = require('../../Utils/api');
 
 module.exports = {
     name: 'ai',
     aliases: ['deepseek', 'ask', 'hira'],
-    description: 'Chat dengan AI Deepseek',
+    description: 'Chat dengan AI',
     category: 'AI',
     usage: '!ai <pertanyaan>',
     
@@ -23,13 +23,31 @@ module.exports = {
         try {
             const result = await api.deepseekAI(query);
             
-            if (result && result.result) {
-                await sock.sendMessage(msg.key.remoteJid, {
-                    text: `🤖 *Hira AI*\n\n${result.result}\n\n_Powered by Deepseek R1_`
-                });
+            // Cek struktur response dan ambil text yang benar
+            let responseText = '';
+            
+            if (typeof result === 'string') {
+                responseText = result;
+            } else if (result.result) {
+                // Kalau result.result adalah object, convert ke string
+                if (typeof result.result === 'object') {
+                    responseText = JSON.stringify(result.result, null, 2);
+                } else {
+                    responseText = result.result;
+                }
+            } else if (result.data) {
+                responseText = typeof result.data === 'object' ? JSON.stringify(result.data, null, 2) : result.data;
+            } else if (result.message) {
+                responseText = result.message;
             } else {
-                throw new Error('Respon tidak valid');
+                // Fallback: stringify seluruh object
+                responseText = JSON.stringify(result, null, 2);
             }
+
+            await sock.sendMessage(msg.key.remoteJid, {
+                text: `🤖 *Hira AI*\n\n${responseText}\n\n_Powered by AI_`
+            });
+            
         } catch (error) {
             await sock.sendMessage(msg.key.remoteJid, {
                 text: `❌ *Error:* ${error.message}`
