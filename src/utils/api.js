@@ -8,16 +8,28 @@ class API {
 
     async deepseekAI(query) {
         try {
-            const response = await axios.get(`${config.urls.ai}`, {
+            const response = await axios.get(`https://api.naze.biz.id/ai/chat`, {
                 params: {
-                    query: query,
+                    messages: query,
                     apikey: this.apikey
                 },
-                timeout: 60000
+                timeout: 120000
             });
-            return response.data;
+            
+            if (response.data && response.data.result) {
+                return response.data;
+            } else {
+                throw new Error(response.data?.error || 'Format response tidak valid');
+            }
+            
         } catch (error) {
-            throw new Error(`AI Error: ${error.message}`);
+            if (error.response) {
+                throw new Error(`Server error: ${error.response.status}`);
+            } else if (error.code === 'ECONNABORTED') {
+                throw new Error('Request timeout');
+            } else {
+                throw new Error(`Error: ${error.message}`);
+            }
         }
     }
 
@@ -28,7 +40,7 @@ class API {
                     url: url,
                     apikey: this.apikey
                 },
-                timeout: 30000
+                timeout: 60000
             });
             return response.data;
         } catch (error) {
@@ -40,10 +52,10 @@ class API {
         try {
             const response = await axios.get(`${config.urls.sticker}`, {
                 params: {
-                    query: query,
+                    q: query,
                     apikey: this.apikey
                 },
-                timeout: 30000
+                timeout: 60000
             });
             return response.data;
         } catch (error) {
