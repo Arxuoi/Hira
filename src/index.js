@@ -1,28 +1,31 @@
 const {
     default: makeWASocket,
     DisconnectReason,
-    useMultiFileAuthState
+    useMultiFileAuthState,
+    fetchLatestBaileysVersion
 } = require('@whiskeysockets/baileys');
 const pino = require('pino');
 const qrcode = require('qrcode-terminal');
 const MessageHandler = require('./Handlers/messagehandlers');
-const config = require('./config/config');
+const config = require('./Config/config');
 
 console.log(`
 ╭━━━━━━━━━━━━━━━━━━━━━━╮
-┃   🤖 ${config.botName} BOT 🤖   ┃
+┃   🤖 ${config.botName.toUpperCase()} BOT 🤖   ┃
 ┃   WhatsApp Multi Device  ┃
 ╰━━━━━━━━━━━━━━━━━━━━━━╯
 `);
 
 async function connectToWhatsApp() {
     const { state, saveCreds } = await useMultiFileAuthState('auth_info_baileys');
+    const { version } = await fetchLatestBaileysVersion();
     
     const sock = makeWASocket({
-        printQRInTerminal: true,
+        version,
         auth: state,
         logger: pino({ level: 'silent' }),
-        browser: ['Hira Bot', 'Chrome', '1.0.0']
+        browser: ['Hira Bot', 'Chrome', '1.0.0'],
+        printQRInTerminal: false // Disable deprecated option
     });
 
     const messageHandler = new MessageHandler(sock);
@@ -30,8 +33,11 @@ async function connectToWhatsApp() {
     sock.ev.on('connection.update', (update) => {
         const { connection, lastDisconnect, qr } = update;
 
+        // Print QR code manual
         if (qr) {
-            console.log('📱 Scan QR code di atas untuk login');
+            console.log('\n📱 SCAN QR CODE INI:\n');
+            qrcode.generate(qr, { small: true });
+            console.log('\n');
         }
 
         if (connection === 'close') {
