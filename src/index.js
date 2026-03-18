@@ -25,7 +25,7 @@ async function connectToWhatsApp() {
         auth: state,
         logger: pino({ level: 'silent' }),
         browser: ['Hira Bot', 'Chrome', '1.0.0'],
-        printQRInTerminal: false // Disable deprecated option
+        printQRInTerminal: false
     });
 
     const messageHandler = new MessageHandler(sock);
@@ -33,7 +33,6 @@ async function connectToWhatsApp() {
     sock.ev.on('connection.update', (update) => {
         const { connection, lastDisconnect, qr } = update;
 
-        // Print QR code manual
         if (qr) {
             console.log('\n📱 SCAN QR CODE INI:\n');
             qrcode.generate(qr, { small: true });
@@ -55,9 +54,13 @@ async function connectToWhatsApp() {
 
     sock.ev.on('creds.update', saveCreds);
 
+    // PENTING: Event messages.upsert
     sock.ev.on('messages.upsert', async (m) => {
+        console.log('📩 Pesan masuk:', JSON.stringify(m, null, 2)); // DEBUG LOG
+        
         const msg = m.messages[0];
         if (!msg.key.fromMe && m.type === 'notify') {
+            console.log('📨 Memproses pesan...'); // DEBUG LOG
             await messageHandler.handle(msg);
         }
     });
